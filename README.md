@@ -1,7 +1,7 @@
 # 🌸Tsukime TypeBridge CLI
 
 ![Coverage Status](https://img.shields.io/badge/version-1.0.0-red)
-![License](https://img.shields.io/badge/license-MIT-blue)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/TsukimeCom/TypeBridge-CLI/blob/main/LICENSE)
 
 A simple tool that transforms GraphQL API types, including objects and enums, into TypeScript types.
 
@@ -27,7 +27,7 @@ Make sure to create a `graphql.config.json` file in the root directory of your p
 
 1. Clone the repository:
 ```bash
-git clone
+git clone https://github.com/TsukimeCom/TypeBridge-CLI.git
 ```
 
 2. Install the dependencies:
