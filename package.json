@@ -1,0 +1,27 @@
+{
+  "name": "tsukime-graphql-formatter",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "bin": {
+    "tsukime-gql": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@date-fns/utc": "^2.1.0",
+    "commander": "^13.1.0",
+    "graphql": "^16.10.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/node-fetch": "^2.6.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}

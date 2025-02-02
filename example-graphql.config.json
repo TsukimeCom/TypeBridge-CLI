@@ -1,0 +1,5 @@
+{
+  "schema": "http://localhost:5000",
+  "outDir": "./types/graphql",
+  "ignore": ["QueryRoot", "MutationRoot", "SubscriptionRoot"]
+}
