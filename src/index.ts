@@ -20,6 +20,7 @@ import {
     isScalarType,
     isUnionType,
     isInterfaceType,
+    isInputType
 } from "graphql";
 
 
@@ -38,6 +39,18 @@ function mapGraphQLTypeToTSType(graphqlType: string): string {
         .replace(/NaiveDateTime/g, "UTCDate")
         .replace(/NaiveTime/g, "UTCDate")
         .replace(/NaiveDate/g, "UTCDate");
+}
+
+function mapGraphQLTypeToTSTypeInputs(graphqlType: string): string {
+    return graphqlType
+        .replace(/String/g, "string")
+        .replace(/Int/g, "number")
+        .replace(/Float/g, "number")
+        .replace(/Boolean/g, "boolean")
+        .replace(/ID/g, "string")
+        .replace(/NaiveDateTime/g, "string")
+        .replace(/NaiveTime/g, "string")
+        .replace(/NaiveDate/g, "string");
 }
 
 function mapGraphQLScalarToTSType(scalarName: string): string {
@@ -68,7 +81,6 @@ function lowercaseFirstLetter(str: string): string {
 
 function generateTypeScriptForType(type: GraphQLNamedType): string {
     if (isObjectType(type)) {
-
         let imports = "";
 
         const fields = type.getFields();
@@ -124,6 +136,33 @@ function generateTypeScriptForType(type: GraphQLNamedType): string {
     else if (isUnionType(type)) {
         const types = type.getTypes().map((t) => t.name).join(" | ");
         return `export type ${type.name} = ${types};`;
+    }
+    else if (isInputType(type)) {
+        let imports = "";
+
+        const fields = type.getFields();
+        const fieldLines = Object.keys(fields)
+            .map((fieldName) => {
+                const field = fields[fieldName];
+                let tsType = mapGraphQLTypeToTSTypeInputs(field.type.toString());
+                const cleanedType = tsType.replaceAll(/\[(.*)\]/gm, "$1").replaceAll("!", "");
+
+                if (!imports.includes(cleanedType)) {
+                    if (!(isScalarType(type) || ignoreFields.includes(cleanedType))) {
+                        imports += enumTypes.includes(cleanedType) ? `import {${cleanedType}} from "../enums/${lowercaseFirstLetter(cleanedType)}";\n` : `import type {${cleanedType}} from "./${lowercaseFirstLetter(cleanedType)}";\n`;
+                    }
+                }
+
+                tsType = tsType.replaceAll(/\[(.*)\]/gm, "$1[]");
+                if (tsType.includes("!")) {
+                    return `  ${fieldName}: ${tsType.replaceAll("!", "")};`;
+                }
+                else {
+                    return `  ${fieldName}?: ${tsType};`;
+                }
+            })
+            .join("\n");
+        return `${imports}\nexport interface ${type.name} {\n${fieldLines}\n}`;
     }
     return "";
 }
@@ -209,6 +248,7 @@ async function main() {
     // Ensure the output directory exists, creating it if necessary.
     mkdirSync(outDir, { recursive: true });
     mkdirSync(path.join(outDir, "enums"), { recursive: true });
+    mkdirSync(path.join(outDir, "inputs"), { recursive: true });
 
     // Get all types from the schema.
     const typeMap = schema.getTypeMap();
@@ -233,7 +273,7 @@ async function main() {
         }
     }
 
-    // Generate the rest of the types
+    // Generate the rest of the objects
     for (const typeName in typeMap) {
         if (typeName.startsWith("__")) continue;
         else if (ignore.includes(typeName)) continue;
@@ -241,11 +281,29 @@ async function main() {
         const type = typeMap[typeName];
 
         if (isScalarType(type) && scalarTypeMap.includes(type.name)) continue;
-        else if (isEnumType(type)) continue;
+        else if (isEnumType(type) || isInputType(type)) continue;
 
         const tsContent = generateTypeScriptForType(type);
         if (tsContent) {
             const filePath = path.join(outDir, `${lowercaseFirstLetter(type.name)}.ts`);
+            writeFileSync(filePath, tsContent, { encoding: "utf-8" });
+            console.log(`Generated ${filePath}`);
+        }
+    }
+
+    // Generate input types
+    for (const typeName in typeMap) {
+        if (typeName.startsWith("__")) continue;
+        else if (ignore.includes(typeName)) continue;
+
+        const type = typeMap[typeName];
+
+        if (isScalarType(type) && scalarTypeMap.includes(type.name)) continue;
+        else if (!isInputType(type) || isEnumType(type)) continue;
+
+        const tsContent = generateTypeScriptForType(type);
+        if (tsContent) {
+            const filePath = path.join(outDir, "inputs", `${lowercaseFirstLetter(type.name)}.ts`);
             writeFileSync(filePath, tsContent, { encoding: "utf-8" });
             console.log(`Generated ${filePath}`);
         }
