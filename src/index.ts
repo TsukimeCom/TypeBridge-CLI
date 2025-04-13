@@ -100,8 +100,17 @@ function generateTypeScriptForType(type: GraphQLNamedType): string {
                     }
                 }
 
+                const isArray = tsType.includes("]");
+                const isArrayAndNotNull = tsType.includes("]!");
+
                 tsType = tsType.replaceAll(/\[(.*)\]/gm, "$1[]");
-                if (tsType.includes("!")) {
+                if (isArrayAndNotNull) {
+                    return `  ${fieldName}: ${tsType.replaceAll("!", "")};`;
+                }
+                else if (isArray) {
+                    return `  ${fieldName}?: ${tsType.replaceAll("!", "")};`;
+                }
+                else if (tsType.includes("!")) {
                     return `  ${fieldName}: ${tsType.replaceAll("!", "")};`;
                 }
                 else {
@@ -153,8 +162,17 @@ function generateTypeScriptForType(type: GraphQLNamedType): string {
                     }
                 }
 
+                const isArray = tsType.includes("]");
+                const isArrayAndNotNull = tsType.includes("]!");
+
                 tsType = tsType.replaceAll(/\[(.*)\]/gm, "$1[]");
-                if (tsType.includes("!")) {
+                if (isArrayAndNotNull) {
+                    return `  ${fieldName}: ${tsType.replaceAll("!", "")};`;
+                }
+                else if (isArray) {
+                    return `  ${fieldName}?: ${tsType.replaceAll("!", "")};`;
+                }
+                else if (tsType.includes("!")) {
                     return `  ${fieldName}: ${tsType.replaceAll("!", "")};`;
                 }
                 else {
@@ -171,7 +189,7 @@ function generateTypeScriptForType(type: GraphQLNamedType): string {
 
 async function main() {
     const program = new Command();
-    program.version("0.1.0");
+    program.version("0.1.1");
 
     // Read config file
     let config: { schema?: string; outDir: string; ignore: string[] } = {
